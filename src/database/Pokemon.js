@@ -1,6 +1,5 @@
 const db = require("./firebase");
 
-
 const getAllPokes = async (filterParams) => {
     try {
         const datos = await db.collection('pokemons').get();
@@ -71,8 +70,52 @@ const getOneGen = async (numGen) => {
     }
 }
 
+
+
+const createNewPoke = async (newPoke) => {
+    try {
+        if (!newPoke.id) {
+             throw { status: 400, message: "El Pokemon debe tener un campo 'id'" };
+        }
+        
+        await db.collection('pokemons').doc(String(newPoke.id)).set(newPoke);
+        
+        return newPoke;
+    } catch (error) {
+        throw { status: 500, message: error?.message || error };
+    }
+};
+
+const updateOnePoke = async (pokeId, changes) => {
+    try {
+        const docRef = db.collection('pokemons').doc(String(pokeId));
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            throw { status: 404, message: `No se puede actualizar: Pokemon ${pokeId} no encontrado` };
+        }
+
+        await docRef.update(changes);
+        return { id: pokeId, ...changes }; 
+    } catch (error) {
+        throw { status: error?.status || 500, message: error?.message || error };
+    }
+};
+
+const deleteOnePoke = async (pokeId) => {
+    try {
+        await db.collection('pokemons').doc(String(pokeId)).delete();
+        return; 
+    } catch (error) {
+        throw { status: 500, message: error?.message || error };
+    }
+};
+
 module.exports = {
     getAllPokes,
     getOnePoke,
-    getOneGen
+    getOneGen,
+    createNewPoke,
+    updateOnePoke,
+    deleteOnePoke
 };
